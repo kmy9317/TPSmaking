@@ -6,6 +6,8 @@
 #include "GameFramework/HUD.h"
 #include "ShooterHUD.generated.h"
 
+class UStatOverlay;
+
 USTRUCT(BlueprintType)
 struct FHUDPackage
 {
@@ -20,15 +22,11 @@ public:
 	FLinearColor CrosshairColor;
 };
 
-/**
- * 
- */
-
 UCLASS()
 class UE5COOP_API AShooterHUD : public AHUD
 {
 	GENERATED_BODY()
-	
+
 public:
 	virtual void DrawHUD() override;
 
@@ -41,9 +39,15 @@ private:
 	FHUDPackage HUDPackage;
 
 	UPROPERTY(EditAnywhere)
-	float CrosshairSpreadMax = 16.f;
+		float CrosshairSpreadMax = 16.f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Stat")
+		TSubclassOf<UStatOverlay> StatOverlayClass;
+
+	UPROPERTY()
+		UStatOverlay* StatOverlay;
 
 public:
 	FORCEINLINE void SetHUDPackage(const FHUDPackage& Package) { HUDPackage = Package; }
-
+	FORCEINLINE UStatOverlay* GetStatOverlay() const { return StatOverlay; }
 };

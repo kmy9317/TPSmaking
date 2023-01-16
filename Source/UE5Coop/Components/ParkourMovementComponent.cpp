@@ -39,7 +39,6 @@ void UParkourMovementComponent::Initialize(ACharacter* InitCharacter)
 	DefaultCrouchSpeed = CharacterMovement->MaxWalkSpeedCrouched;
 	DefaultCapsuleHalfHeight = Character->GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
 	DefaultUseControllerRotationYaw = Character->bUseControllerRotationYaw;
-	GetWorld()->GetTimerManager().SetTimer(UpdateTimer, this, &UParkourMovementComponent::ParkourMovementUpdate, UpdateDelay, true);
 }
 
 void UParkourMovementComponent::ParkourMovementUpdate()
@@ -55,6 +54,7 @@ void UParkourMovementComponent::TickComponent(float DeltaTime, ELevelTick TickTy
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	ParkourMovementUpdate();
 	InterpCapsuleHalfHeight(DeltaTime);
 }
 
@@ -62,7 +62,7 @@ bool UParkourMovementComponent::SetParkourMovementMode(EParkourMovementType NewM
 {
 	if (NewMode == CurrentParkourMovementMode) return false;
 	else ParkourMovementChanged(CurrentParkourMovementMode, NewMode);
-		
+
 	return true;
 }
 
@@ -240,6 +240,12 @@ void UParkourMovementComponent::CheckQueues()
 
 }
 
+bool UParkourMovementComponent::StaminaIsNotZero()
+{
+	if (ShooterCharacter == nullptr) return false;
+	return ShooterCharacter->GetCurrentStamina() > 0.f;
+}
+
 void UParkourMovementComponent::WallRun()
 {
 	if (!WallRunGate.IsOpen()) return;
@@ -309,7 +315,7 @@ void UParkourMovementComponent::CorrectWallRunPosition()
 		FVector WallRunCorrectPos =
 			WallRunTargetPosition +
 			WallRunNormal * Character->GetCapsuleComponent()->GetUnscaledCapsuleRadius();
-		
+
 		float CorrectRoll = Character->GetCapsuleComponent()->GetRelativeRotation().Roll;
 		float CorrectPitch = Character->GetCapsuleComponent()->GetRelativeRotation().Pitch;
 		float CorrectYaw =
@@ -333,12 +339,15 @@ void UParkourMovementComponent::CorrectWallRunPosition()
 
 bool UParkourMovementComponent::CanWallRun()
 {
-	return (CurrentParkourMovementMode == EParkourMovementType::EPM_None || IsWallRunning()) && ForwardInput() > 0.f;
+	return (CurrentParkourMovementMode == EParkourMovementType::EPM_None ||
+		IsWallRunning() ||
+		ShooterCharacter->GetAO_Yaw() < 89.f ||
+		ShooterCharacter->GetAO_Yaw() > -89.f) && ForwardInput() > 0.f;
 }
 
 bool UParkourMovementComponent::IsWallRunning()
 {
-	return CurrentParkourMovementMode == EParkourMovementType::EPM_LeftWallRun || 
+	return CurrentParkourMovementMode == EParkourMovementType::EPM_LeftWallRun ||
 		CurrentParkourMovementMode == EParkourMovementType::EPM_RightWallRun;
 }
 
@@ -371,7 +380,7 @@ bool UParkourMovementComponent::WallRunMovement(const FVector& Start, const FVec
 		if (bShouldLaunchCharacter)
 		{
 			//bool bZOverride = !bWallRunGravity && !IsWallRunning();
-			FVector LaunchDirection = FVector::CrossProduct(WallRunNormal, FVector(0.f, 0.f, 1.f ));
+			FVector LaunchDirection = FVector::CrossProduct(WallRunNormal, FVector(0.f, 0.f, 1.f));
 			float SpeedScale = bSprintQueued ? WallRunSprintSpeed : WallRunSpeed;
 			Character->LaunchCharacter(LaunchDirection * (SpeedScale * WallRunDirection), true, true);
 
@@ -520,6 +529,7 @@ bool UParkourMovementComponent::CanVerticalWallRun()
 		CurrentParkourMovementMode == EParkourMovementType::EPM_VerticalWallRun ||
 		IsWallRunning()) &&
 		ForwardInput() > 0.f &&
+		StaminaIsNotZero() &&
 		CharacterMovement->IsFalling();
 }
 
@@ -535,14 +545,14 @@ void UParkourMovementComponent::ForwardTracer(FHitResult& OutHit)
 		FVector End = Feet + Forward;
 		FCollisionQueryParams Query;
 		Query.AddIgnoredActor(Character);
-		
+
 		World->LineTraceSingleByChannel(
 			OutHit,
 			Feet,
 			End,
 			ECollisionChannel::ECC_Visibility,
 			Query
-			);	
+		);
 	}
 }
 
@@ -564,7 +574,7 @@ void UParkourMovementComponent::VerticalWallRunMovement()
 		Character->LaunchCharacter(LaunchVelocity, true, true);
 	}
 	else VerticalWallRunEnd(.35f);
-	
+
 }
 
 void UParkourMovementComponent::CorrectVerticalWallRunPosition()
@@ -734,7 +744,7 @@ void UParkourMovementComponent::CloseMantleGate()
 
 void UParkourMovementComponent::MantleVectors(FVector& OutEyes, FVector& OutFeet)
 {
-	if (Character->GetController() && Character->GetCapsuleComponent())	
+	if (Character->GetController() && Character->GetCapsuleComponent())
 	{
 		FVector EyesPos;
 		FRotator EyesRot;
@@ -768,6 +778,10 @@ void UParkourMovementComponent::MantleCheck()
 	{
 		MantleStart();
 	}
+	else if (CurrentParkourMovementMode == EParkourMovementType::EPM_LedgeGrab && !StaminaIsNotZero())
+	{
+		VerticalWallRunEnd(0.36f);
+	}
 }
 
 void UParkourMovementComponent::MantleStart()
@@ -792,7 +806,7 @@ void UParkourMovementComponent::MantleMovement()
 		FRotator InterpRot = FMath::RInterpTo(CurrentRot, TargetRot, UGameplayStatics::GetWorldDeltaSeconds(this), 7.f);
 
 		Character->GetController()->SetControlRotation(InterpRot);
-		
+
 		FVector CurrentPos = Character->GetActorLocation();
 		FVector TargetPos = MantlePosition;
 		float InterpSpeed = CanQuickMantle() ? QuickMantleSpeed : MantleSpeed;
@@ -840,7 +854,7 @@ void UParkourMovementComponent::CloseSprintGate()
 
 void UParkourMovementComponent::SprintUpdate()
 {
-	if (CurrentParkourMovementMode == EParkourMovementType::EPM_Sprint && !(ForwardInput() > 0.f))
+	if (CurrentParkourMovementMode == EParkourMovementType::EPM_Sprint && !(ForwardInput() > 0.f) || !StaminaIsNotZero())
 	{
 		SprintEnd();
 	}
@@ -951,7 +965,7 @@ void UParkourMovementComponent::Slide()
 
 void UParkourMovementComponent::SlideUpdate()
 {
-	if (CurrentParkourMovementMode == EParkourMovementType::EPM_Slide && CharacterMovement->Velocity.Length() <= 35.f)
+	if (ShouldSlideEnd())
 	{
 		SlideEnd(true);
 	}
@@ -972,7 +986,7 @@ void UParkourMovementComponent::SlideStart()
 		FVector SlideVector = GetSlideVector();
 
 		if (SlideVector.Z <= 0.2f)
-		{		
+		{
 			CharacterMovement->AddImpulse(SlideVector * SlidingImpulseAmount, true);
 		}
 		OpenSlideGate();
@@ -1023,6 +1037,13 @@ void UParkourMovementComponent::SlideJump()
 	}
 }
 
+bool UParkourMovementComponent::ShouldSlideEnd()
+{
+	return (CurrentParkourMovementMode == EParkourMovementType::EPM_Slide && CharacterMovement->Velocity.Length() <= 35.f) ||
+		ShooterCharacter->GetAO_Yaw() > 89.f ||
+		ShooterCharacter->GetAO_Yaw() < -89.f;
+}
+
 void UParkourMovementComponent::SlideEnd(bool bCrouch)
 {
 	if (CurrentParkourMovementMode == EParkourMovementType::EPM_Slide)
@@ -1034,5 +1055,4 @@ void UParkourMovementComponent::SlideEnd(bool bCrouch)
 		}
 	}
 }
-
 

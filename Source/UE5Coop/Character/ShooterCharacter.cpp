@@ -5,6 +5,7 @@
 #include "Components/CapsuleComponent.h"
 #include "UE5Coop/Components/CombatComponent.h"
 #include "UE5Coop/Components/ParkourMovementComponent.h"
+#include "UE5Coop/Components/StatComponent.h"
 #include "UE5Coop/Weapons/Weapon.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetMaterialLibrary.h"
@@ -25,6 +26,7 @@ AShooterCharacter::AShooterCharacter()
 
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	ParkourMovement = CreateDefaultSubobject<UParkourMovementComponent>(TEXT("ParkourMovement"));
+	Stat = CreateDefaultSubobject<UStatComponent>(TEXT("Stat"));
 }
 
 void AShooterCharacter::PostInitializeComponents()
@@ -33,6 +35,7 @@ void AShooterCharacter::PostInitializeComponents()
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	Combat->SetShooterCharacter(this);
+	Stat->SetShooterCharacter(this);
 }
 
 void AShooterCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
@@ -47,13 +50,13 @@ void AShooterCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, ui
 void AShooterCharacter::Landed(const FHitResult& Hit)
 {
 	Super::OnLanded(Hit);
-	//ParkourMovement->LandEvent();
+	ParkourMovement->LandEvent();
 }
 
 void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	if (ParkourMovement)
 	{
 		ParkourMovement->Initialize(this);
@@ -133,7 +136,7 @@ bool AShooterCharacter::IsNotSpecificParkourMovement()
 void AShooterCharacter::SetMaterialInstanceDynamics()
 {
 	TArray<UMaterialInterface*> Materials = GetMesh()->GetMaterials();
-	
+
 	if (Materials.IsEmpty()) return;
 
 	for (int32 Index = 0; Index < Materials.Num(); Index++)
@@ -143,7 +146,7 @@ void AShooterCharacter::SetMaterialInstanceDynamics()
 		{
 			MaterialInstanceDynamics.Add(DynamicMaterial);
 			GetMesh()->SetMaterial(Index, Materials[Index]);
-		}	
+		}
 	}
 }
 
@@ -152,11 +155,6 @@ void AShooterCharacter::SetMaterialParamters()
 	if (MaterialInstanceDynamics.IsEmpty() || FollowCamera == nullptr) return;
 	float DistanceCharacterToCamera = FVector::Distance(GetActorLocation(), FollowCamera->GetComponentLocation());
 	float Opacity = UKismetMathLibrary::MapRangeClamped(DistanceCharacterToCamera, 70.f, 130.f, 0.f, 1.f);
-
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(1, -1, FColor::Blue, FString::Printf(TEXT("Distance : %f"), DistanceCharacterToCamera));
-	}
 
 	for (auto Material : MaterialInstanceDynamics)
 	{
@@ -172,6 +170,7 @@ void AShooterCharacter::SetMaterialParamters()
 
 void AShooterCharacter::TurnInPlace(float DeltaTime)
 {
+	if (ParkourMovement->CurrentParkourMovementMode != EParkourMovementType::EPM_None && ParkourMovement->CurrentParkourMovementMode != EParkourMovementType::EPM_Crouch) return;
 	if (AO_Yaw > 90.f)
 	{
 		TurningInPlace = ETurningInPlace::ETIP_Right;
@@ -197,7 +196,7 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
-	{	
+	{
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AShooterCharacter::Move);
 		EnhancedInputComponent->BindAction(FlyingMoveAction, ETriggerEvent::Triggered, this, &AShooterCharacter::FlyingMove);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AShooterCharacter::Look);
@@ -315,7 +314,7 @@ void AShooterCharacter::PlayUnequipAbilityWeaponMontage()
 void AShooterCharacter::SprintButtonPressed()
 {
 	if (GetCharacterMovement()->IsFalling()) return;
-	
+
 	if (ParkourMovement)
 	{
 		ParkourMovement->SprintEvent();
@@ -344,6 +343,10 @@ void AShooterCharacter::EquipAbilityWeaponButtonPressed()
 void AShooterCharacter::FireButtonPressedOrReleased(const FInputActionValue& Value)
 {
 	const bool bFireButtonPressed = Value.Get<bool>();
+	if (bFireButtonPressed && ParkourMovement->CurrentParkourMovementMode == EParkourMovementType::EPM_Sprint)
+	{
+		ParkourMovement->SetParkourMovementMode(EParkourMovementType::EPM_None);
+	}
 	if (Combat)
 	{
 		Combat->FireButtonPressed(bFireButtonPressed);
@@ -431,4 +434,9 @@ FVector AShooterCharacter::GetHitTarget() const
 	return Combat->HitTarget;
 }
 
+float AShooterCharacter::GetCurrentStamina() const
+{
+	if (Stat == nullptr) return -1.f;
+	return Stat->CurrentStamina;
+}
 

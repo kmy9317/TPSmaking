@@ -2,6 +2,7 @@
 
 
 #include "Weapon.h"
+#include "Particles/ParticleSystemComponent.h"
 
 AWeapon::AWeapon()
 {
@@ -14,12 +15,13 @@ AWeapon::AWeapon()
 	WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECollisionResponse::ECR_Ignore);
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 }
 
 void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	SetMaterialInstanceDynamics();
 }
 
@@ -71,9 +73,8 @@ void AWeapon::SetWeaponState(EWeaponState WeaponState)
 		WeaponMesh->SetEnableGravity(false);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		break;
-	}	
+	}
 }
-
 
 
 

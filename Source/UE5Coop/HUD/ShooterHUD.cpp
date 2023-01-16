@@ -2,10 +2,22 @@
 
 
 #include "ShooterHUD.h"
+#include "UE5Coop/HUD/StatOverlay.h"
 
 void AShooterHUD::BeginPlay()
 {
 	Super::BeginPlay();
+
+	UWorld* World = GetWorld();
+	if (World)
+	{
+		APlayerController* Controller = World->GetFirstPlayerController();
+		if (Controller && StatOverlayClass)
+		{
+			StatOverlay = CreateWidget<UStatOverlay>(Controller, StatOverlayClass);
+			StatOverlay->AddToViewport();
+		}
+	}
 }
 
 void AShooterHUD::DrawHUD()

@@ -26,10 +26,15 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 		SpawnParams.Instigator = InstigatorPawn;
 		World->SpawnActor<AProjectile>(ProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParams);
 
-		UGameplayStatics::SpawnEmitterAtLocation(
-			GetWorld(),
+		UGameplayStatics::SpawnEmitterAttached(
 			MuzzleFlash,
-			SocketTransform);
+			GetWeaponMesh(),
+			FName(""),
+			SocketTransform.GetLocation(),
+			FRotator(SocketTransform.GetRotation()),
+			EAttachLocation::KeepWorldPosition
+		);
+
 	}
 
 }

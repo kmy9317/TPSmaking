@@ -20,6 +20,7 @@ class UInputAction;
 class UAnimMontage;
 class UCombatComponent;
 class UParkourMovementComponent;
+class UStatComponent;
 class AWeapon;
 
 UCLASS()
@@ -44,40 +45,40 @@ protected:
 	virtual void Jump() override;
 
 	UPROPERTY(EditAnywhere, Category = Input)
-	UInputMappingContext* GroundModeContext;
+		UInputMappingContext* GroundModeContext;
 
 	UPROPERTY(EditAnywhere, Category = Input)
-	UInputMappingContext* FlyingModeContext;
+		UInputMappingContext* FlyingModeContext;
 
 	UPROPERTY(EditAnywhere, Category = Input)
-	UInputAction* MoveAction;
+		UInputAction* MoveAction;
 
 	UPROPERTY(EditAnywhere, Category = Input)
-	UInputAction* FlyingMoveAction;
+		UInputAction* FlyingMoveAction;
 
 	UPROPERTY(EditAnywhere, Category = Input)
-	UInputAction* LookAction;
+		UInputAction* LookAction;
 
 	UPROPERTY(EditAnywhere, Category = Input)
-	UInputAction* JumpAction;
+		UInputAction* JumpAction;
 
 	UPROPERTY(EditAnywhere, Category = Input)
-	UInputAction* SlidingAction;
+		UInputAction* SlidingAction;
 
 	UPROPERTY(EditAnywhere, Category = Input)
-	UInputAction* SprintAction;
+		UInputAction* SprintAction;
 
 	UPROPERTY(EditAnywhere, Category = Input)
-	UInputAction* CrouchAction;
+		UInputAction* CrouchAction;
 
 	UPROPERTY(EditAnywhere, Category = Input)
-	UInputAction* DisableFlyingAction;
+		UInputAction* DisableFlyingAction;
 
 	UPROPERTY(EditAnywhere, Category = Input)
-	UInputAction* EquipAbilityWeaponAction;
+		UInputAction* EquipAbilityWeaponAction;
 
 	UPROPERTY(EditAnywhere, Category = Input)
-	UInputAction* FireWeaponAction;
+		UInputAction* FireWeaponAction;
 
 	void Move(const FInputActionValue& Value);
 	void FlyingMove(const FInputActionValue& Value);
@@ -85,7 +86,7 @@ protected:
 
 	void FlyingOrJump();
 	void DisableFlyingMode();
-	
+
 	void SlidingButtonPressed();
 	void SprintButtonPressed();
 	void CrouchButtonPressed();
@@ -96,7 +97,7 @@ protected:
 	void SetupToFlyingMode();
 
 	UFUNCTION(BlueprintCallable)
-	void FinishSliding();
+		void FinishSliding();
 
 	void SpawnAbilityWeapon();
 	void AimOffset(float DeltaTime);
@@ -114,55 +115,59 @@ private:
 	UEnhancedInputLocalPlayerSubsystem* SubSystem;
 
 	UPROPERTY(VisibleAnywhere)
-	USkeletalMeshComponent* CharacterMesh;
+		USkeletalMeshComponent* CharacterMesh;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	USpringArmComponent* CameraBoom;
+		USpringArmComponent* CameraBoom;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UCameraComponent* FollowCamera;
+		UCameraComponent* FollowCamera;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UCombatComponent* Combat;
+		UCombatComponent* Combat;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UParkourMovementComponent* ParkourMovement;
+		UParkourMovementComponent* ParkourMovement;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+		UStatComponent* Stat;
 
 	bool bJumpButtonClicked = false;
 
 	EPlayerStatus PlayerStatus = EPlayerStatus::EPS_Walking;
 
 	UPROPERTY(EditDefaultsOnly, Category = Montages)
-	UAnimMontage* SlidingMontage;
+		UAnimMontage* SlidingMontage;
 
 	UPROPERTY(EditDefaultsOnly, Category = Montages)
-	UAnimMontage* EquipAbilityWeaponMontage;
+		UAnimMontage* EquipAbilityWeaponMontage;
 
 	UPROPERTY(EditDefaultsOnly, Category = Montages)
-	UAnimMontage* UnequipAbilityWeaponMontage;
+		UAnimMontage* UnequipAbilityWeaponMontage;
 
 	UPROPERTY(EditAnywhere, Category = Movement)
-	float WalkSpeed;
+		float WalkSpeed;
 
 	UPROPERTY(EditAnywhere, Category = Weapon)
-	TSubclassOf<AWeapon> AbilityWeapon;
+		TSubclassOf<AWeapon> AbilityWeapon;
 
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
-	AWeapon* InitAbilityWeapon;
+		AWeapon* InitAbilityWeapon;
 
 	float AO_Yaw;
 	float InterpAO_Yaw;
 	float AO_Pitch;
 	FRotator StartingAimRotation;
 
-	ETurningInPlace TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+	UPROPERTY(VisibleAnywhere)
+		ETurningInPlace TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 
 	UPROPERTY(VisibleAnywhere)
-	bool bRotateRootBone;
+		bool bRotateRootBone;
 
 	TArray<UMaterialInstanceDynamic*> MaterialInstanceDynamics;
 
-public:		
+public:
 	FORCEINLINE EPlayerStatus GetPlayerStatus() const { return PlayerStatus; }
 	FORCEINLINE void SetPlayerStatus(EPlayerStatus SetupPlayerStatus) { PlayerStatus = SetupPlayerStatus; }
 	ECombatState GetCombatState() const;
@@ -176,4 +181,5 @@ public:
 	bool IsWeaponEquipped();
 	AWeapon* GetEquippedWeapon();
 	FVector GetHitTarget() const;
+	float GetCurrentStamina() const;
 };

@@ -12,12 +12,12 @@ class ACharacter;
 class UCharacterMovementComponent;
 class AShooterCharacter;
 
-UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class UE5COOP_API UParkourMovementComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
-public:	
+public:
 	friend class AShooterCharacter;
 
 	UParkourMovementComponent();
@@ -44,6 +44,7 @@ protected:
 	void CloseGates();
 	void EndEvents();
 	void CheckQueues();
+	bool StaminaIsNotZero();
 
 	// Wall Run
 	void WallRun();
@@ -106,7 +107,7 @@ protected:
 	void CrouchToggle();
 	void CrouchStart();
 	void CrouchJump();
-	void CrouchEnd();	
+	void CrouchEnd();
 	void Slide();
 	void SlideUpdate();
 	void SlideStart();
@@ -115,46 +116,47 @@ protected:
 	bool CanSlide();
 	FVector GetSlideVector();
 	void SlideJump();
+	bool ShouldSlideEnd();
 	void SlideEnd(bool bCrouch = false);
 
 private:
 
 	UPROPERTY(VisibleAnywhere, Category = Character)
-	ACharacter* Character;
+		ACharacter* Character;
 
 	UPROPERTY(VisibleAnywhere, Category = Character)
-	AShooterCharacter* ShooterCharacter;
+		AShooterCharacter* ShooterCharacter;
 
 	UPROPERTY(VisibleAnywhere, Category = Character)
-	UCharacterMovementComponent* CharacterMovement;
+		UCharacterMovementComponent* CharacterMovement;
 
 	EMovementMode PrevMovementMode;
 	EMovementMode CurrentMovementMode;
 
 	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = "true"))
-	EParkourMovementType PrevParkourMovementMode;
+		EParkourMovementType PrevParkourMovementMode;
 
 	UPROPERTY(VisibleAnywhere, meta = (AllowPrivateAccess = "true"))
-	EParkourMovementType CurrentParkourMovementMode;
+		EParkourMovementType CurrentParkourMovementMode;
 
 	// Gates
 	UPROPERTY(VisibleAnywhere)
-	FGate WallRunGate = FGate(true);
+		FGate WallRunGate = FGate(true);
 
 	UPROPERTY(VisibleAnywhere)
-	FGate VerticalWallRunGate = FGate(true);
+		FGate VerticalWallRunGate = FGate(true);
 
 	UPROPERTY(VisibleAnywhere)
-	FGate MantleCheckGate = FGate(true);
+		FGate MantleCheckGate = FGate(true);
 
 	UPROPERTY(VisibleAnywhere)
-	FGate MantleGate = FGate(true);
+		FGate MantleGate = FGate(true);
 
 	UPROPERTY(VisibleAnywhere)
-	FGate SprintGate = FGate(true);
+		FGate SprintGate = FGate(true);
 
 	UPROPERTY(VisibleAnywhere)
-	FGate SlideGate = FGate(true);
+		FGate SlideGate = FGate(true);
 
 	// Default Values
 	float DefaultGravity;
@@ -166,8 +168,8 @@ private:
 
 	FTimerHandle UpdateTimer;
 	UPROPERTY(EditDefaultsOnly)
-	float UpdateDelay = 0.0167f;
-	
+		float UpdateDelay = 0.0167f;
+
 	// Wall Run Variables
 	FVector WallRunNormal;
 	FVector WallRunTargetPosition;
@@ -176,19 +178,19 @@ private:
 	FTimerHandle WallRunEnableGravityTimer;
 
 	UPROPERTY(EditDefaultsOnly, Category = "WallRun")
-	float WallRunSpeed = 850.f;
+		float WallRunSpeed = 850.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "WallRun")
-	float WallRunSprintSpeed = 1100.f;
+		float WallRunSprintSpeed = 1100.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "WallRun")
-	float WallRunTargetGravity = 0.25f;
+		float WallRunTargetGravity = 0.25f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "WallRun")
-	float WallRunJumpOffForce = 300.f;
+		float WallRunJumpOffForce = 300.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "WallRun")
-	float WallRunJumpHeight = 400.f;
+		float WallRunJumpHeight = 400.f;
 
 	// Vertial Wall Run && Ledge Variables
 	bool bLedgeCloseToGround = false;
@@ -201,13 +203,13 @@ private:
 	FVector LedgeClimbWallTargetNormal;
 
 	UPROPERTY(EditDefaultsOnly, Category = "VerticalWallRun")
-	float VerticalWallRunSpeed = 300.f;
+		float VerticalWallRunSpeed = 300.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "LedgeGrab")
-	float LedgeGrabJumpOffForce = 300.f;
+		float LedgeGrabJumpOffForce = 300.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "LedgeGrab")
-	float LedgeGrabJumpHeight = 400.f;
+		float LedgeGrabJumpHeight = 400.f;
 
 	// Mantle Variables
 	float MantleTraceDistance;
@@ -215,33 +217,33 @@ private:
 	FTimerHandle OpenMantleCheckTimer;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Mantle")
-	float MantleHeight = 40.f;
+		float MantleHeight = 40.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Mantle")
-	float MantleSpeed = 10.f;
+		float MantleSpeed = 10.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Mantle")
-	float QuickMantleSpeed = 20.f;
+		float QuickMantleSpeed = 20.f;
 
 	// Sprint Variables
 	bool bSprintQueued = false;
 	FTimerHandle OpenSprintTimer;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Sprint")
-	float SprintSpeed = 1000.f;
+		float SprintSpeed = 1000.f;
 
 	// Crouch && Slide Variables
 	float DefaultCapsuleHalfHeight;
 
 	UPROPERTY(EditDefaultsOnly, Category = "CrouchAndSlide")
-	float CrouchingCapsuleHalfHeight = 60.f;
+		float CrouchingCapsuleHalfHeight = 60.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "CrouchAndSlide")
-	float SlidingCapsuleHalfHeight = 60.f;
+		float SlidingCapsuleHalfHeight = 60.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "CrouchAndSlide")
-	float SlidingBrakingDeceleration = 1400.f;
+		float SlidingBrakingDeceleration = 1400.f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "CrouchAndSlide")
-	float SlidingImpulseAmount = 600.f;
+		float SlidingImpulseAmount = 600.f;
 };
