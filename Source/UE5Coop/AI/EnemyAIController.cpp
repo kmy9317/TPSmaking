@@ -5,7 +5,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
-#include "UE5Coop/EnemyCharacter.h"
+#include "UE5Coop/Character/EnemyCharacter.h"
 
 AEnemyAIController::AEnemyAIController()
 {
