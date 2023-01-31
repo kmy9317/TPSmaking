@@ -9,16 +9,12 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/BoxComponent.h"
+#include "UE5Coop/Enums/AIState.h"
 
 // Sets default values
-AEnemyCharacter::AEnemyCharacter() :
-	Attack1(TEXT("AttackSwing")),
-	Attack2(TEXT("AttackSlam")),
-	bStunned(false),
-	bCanAttack(true),
-	AttackWaitTime(4.f)
+AEnemyCharacter::AEnemyCharacter()
 {
- 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
 	AgroSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AgroSphere"));
@@ -30,13 +26,19 @@ AEnemyCharacter::AEnemyCharacter() :
 	LeftWeaponCollision->SetupAttachment(GetMesh(), FName("LeftWeaponCollision"));
 	RightWeaponCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Right Weapon Collision"));
 	RightWeaponCollision->SetupAttachment(GetMesh(), FName("RightWeaponCollision"));
+
+	// default values
+	bStunned = false;
+	bCanAttack = true;
+	AttackWaitTime = 4.f;
+	AIState = EAIState::EAIS_Chasing;
 }
 
 // Called when the game starts or when spawned
 void AEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	AgroSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCharacter::AgroSphereOverlap);
 	CombatRangeSphere->OnComponentBeginOverlap.AddDynamic(this, &AEnemyCharacter::CombatRangeOverlap);
 	CombatRangeSphere->OnComponentEndOverlap.AddDynamic(this, &AEnemyCharacter::CombatRangeEndOverlap);
@@ -60,26 +62,8 @@ void AEnemyCharacter::BeginPlay()
 
 	/** Get AI Controller */
 	EnemyController = Cast<AEnemyAIController>(GetController());
-
 	if (EnemyController)
 	{
-		EnemyController->GetBlackboardComponent()->SetValueAsBool(FName("CanAttack"), true);
-	}
-
-	StartPoint = GetActorLocation();
-	DrawDebugSphere(
-		GetWorld(),
-		StartPoint,
-		25.f,
-		12,
-		FColor::Red,
-		true
-	);
-
-	if (EnemyController)
-	{
-		EnemyController->GetBlackboardComponent()->SetValueAsVector(TEXT("StartPoint"), StartPoint);
-
 		EnemyController->RunBehaviorTree(BehaviorTree);
 	}
 }
@@ -107,6 +91,7 @@ void AEnemyCharacter::AgroSphereOverlap(UPrimitiveComponent* OverlappedComponent
 		if (Character)
 		{
 			EnemyController->GetBlackboardComponent()->SetValueAsObject(TEXT("AgroTarget"), Character);
+			AIState = EAIState::EAIS_Chasing;
 		}
 	}
 }
@@ -145,7 +130,7 @@ void AEnemyCharacter::GetHit(FHitResult* HitResult)
 	if (Stunned < StunChance)
 	{
 		//Stun the Enemy
-		
+
 		//PlayHitMontage(FName("HitReact"));
 		SetStunned(true);
 		//TODO: ABP에서 해당 애니메이션 출력끝나면 bStunned를 false로 되돌리자.
@@ -160,7 +145,7 @@ void AEnemyCharacter::SetStunned(bool Stunned)
 	{
 		EnemyController->GetBlackboardComponent()->SetValueAsBool(TEXT("Stunned"), Stunned);
 	}
-	
+
 }
 
 void AEnemyCharacter::PlayAttackMontage(FName Section, float PlayRate)
@@ -188,14 +173,14 @@ FName AEnemyCharacter::GetRandomAttackSectionName()
 {
 	FName SectionName;
 	const int32 Section{ FMath::RandRange(1,2) };
-	switch(Section)
+	switch (Section)
 	{
-		case 1:
-			SectionName = Attack1;
-			break;
-		case 2:
-			SectionName = Attack2;
-			break;
+	case 1:
+		SectionName = Attack1;
+		break;
+	case 2:
+		SectionName = Attack2;
+		break;
 	}
 
 	return SectionName;
