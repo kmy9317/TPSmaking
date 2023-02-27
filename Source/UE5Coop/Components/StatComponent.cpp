@@ -42,6 +42,17 @@ void UStatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	CheckStamina(DeltaTime);
 }
 
+bool UStatComponent::ApplyHealthChange(float Delta)
+{
+	 float CalculatedHP = FMath::Clamp(CurrentHp + Delta, 0.f, MaxHp);
+
+	 if (CalculatedHP == CurrentHp) return false;
+	 
+	 CurrentHp = CalculatedHP;
+	 StatOverlay->SetHealthBarPercent(GetHealthPercent());
+	 return true;
+}
+
 void UStatComponent::CheckStamina(float DeltaTime)
 {
 	if (ShooterCharacter == nullptr) return;
@@ -53,7 +64,6 @@ void UStatComponent::CheckStamina(float DeltaTime)
 	}
 	else if (!ShooterCharacter->GetWorldTimerManager().IsTimerActive(RegenStaminaTimer) && !bCanGenerateStamina)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SetTimer"));
 		ShooterCharacter->GetWorldTimerManager().SetTimer(
 			RegenStaminaTimer,
 			this,
@@ -70,7 +80,6 @@ bool UStatComponent::ShouldUseStamina(float& OutSpendAmount)
 {
 	EParkourMovementType CurrentParkour = ShooterCharacter->GetParkourMovementMode();
 	if (!IsSpecificParkourAction(CurrentParkour)) return false;
-
 
 	switch (CurrentParkour)
 	{

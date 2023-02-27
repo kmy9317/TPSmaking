@@ -24,48 +24,53 @@ public:
 protected:
 	virtual void BeginPlay() override;
 	void InitStatOverlay();
+
+	UFUNCTION(BlueprintCallable)
+	bool ApplyHealthChange(float Delta);
+
 	void CheckStamina(float DeltaTime);
 	bool ShouldUseStamina(float& OutSpendAmount);
 	void UseStamina(float Amount, float DeltaTime);
 	void ReGenStamina();
 	void SetTrueRegenStaminaBoolean();
+
 	bool IsSpecificParkourAction(EParkourMovementType CurrentParkour);
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Character")
-		AShooterCharacter* ShooterCharacter;
+	AShooterCharacter* ShooterCharacter;
 
 	UPROPERTY()
-		UStatOverlay* StatOverlay;
+	UStatOverlay* StatOverlay;
 
 	// Health
 	UPROPERTY(EditDefaultsOnly, Category = "Health")
-		float MaxHp = 100.f;
+	float MaxHp = 100.f;
 
 	UPROPERTY(VisibleAnywhere, Category = "Health")
-		float CurrentHp = 100.f;
+	float CurrentHp = 100.f;
 
 	// Stamina
 	UPROPERTY(EditDefaultsOnly, Category = "Stamina")
-		float MaxStamina = 100.f;
+	float MaxStamina = 100.f;
 
 	UPROPERTY(VisibleAnywhere, Category = "Stamina")
-		float CurrentStamina = 100.f;
+	float CurrentStamina = 100.f;
 
 	UPROPERTY(EditAnywhere, Category = "Stamina")
-		float VerticalrActionStamina = 20.f;
+	float VerticalrActionStamina = 20.f;
 
 	UPROPERTY(EditAnywhere, Category = "Stamina")
-		float SprintStamina = 20.f;
+	float SprintStamina = 20.f;
 
 	FTimerHandle RegenStaminaTimer;
 	bool bCanGenerateStamina = true;
 
 	UPROPERTY(EditAnywhere, Category = "Stamina")
-		float RegenStaminaTime = 2.f;
+	float RegenStaminaTime = 2.f;
 
 	UPROPERTY(EditAnywhere, Category = "Stamina")
-		float RegenStaminaPerSecond = 20.f;
+	float RegenStaminaPerSecond = 20.f;
 
 public:
 	FORCEINLINE void SetShooterCharacter(AShooterCharacter* Shooter) { ShooterCharacter = Shooter; }
