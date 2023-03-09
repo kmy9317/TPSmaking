@@ -5,7 +5,7 @@
 #include "Components/CapsuleComponent.h"
 #include "UE5Coop/Components/CombatComponent.h"
 #include "UE5Coop/Components/ParkourMovementComponent.h"
-#include "UE5Coop/Components/StatComponent.h"
+#include "UE5Coop/Components/CharacterStatComponent.h"
 #include "UE5Coop/Weapons/Weapon.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetMaterialLibrary.h"
@@ -26,7 +26,9 @@ AShooterCharacter::AShooterCharacter()
 
 	Combat = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	ParkourMovement = CreateDefaultSubobject<UParkourMovementComponent>(TEXT("ParkourMovement"));
-	Stat = CreateDefaultSubobject<UStatComponent>(TEXT("Stat"));
+	CharacterStat = CreateDefaultSubobject<UCharacterStatComponent>(TEXT("CharacterStat"));
+
+	TimeToHitParamName = "TimeToHit";
 }
 
 void AShooterCharacter::PostInitializeComponents()
@@ -35,7 +37,8 @@ void AShooterCharacter::PostInitializeComponents()
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	Combat->SetShooterCharacter(this);
-	Stat->SetShooterCharacter(this);
+	CharacterStat->SetShooterCharacter(this);
+	CharacterStat->OnHealthChanged.AddUniqueDynamic(this, &AShooterCharacter::OnHealthChanged);
 }
 
 void AShooterCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PreviousCustomMode)
@@ -165,6 +168,14 @@ void AShooterCharacter::SetMaterialParamters()
 	if (InitAbilityWeapon)
 	{
 		InitAbilityWeapon->SetMaterialParamters(Opacity);
+	}
+}
+
+void AShooterCharacter::OnHealthChanged(AActor* InstigatorActor, UStatComponent* OwningComp, float NewHealth, float Delta)
+{
+	if (Delta < 0.0f)
+	{
+		GetMesh()->SetScalarParameterValueOnMaterials(TimeToHitParamName, GetWorld()->TimeSeconds);
 	}
 }
 
@@ -436,7 +447,7 @@ FVector AShooterCharacter::GetHitTarget() const
 
 float AShooterCharacter::GetCurrentStamina() const
 {
-	if (Stat == nullptr) return -1.f;
-	return Stat->CurrentStamina;
+	if (CharacterStat == nullptr) return -1.f;
+	return CharacterStat->GetCurrentStamina();
 }
 

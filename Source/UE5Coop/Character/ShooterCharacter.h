@@ -20,7 +20,7 @@ class UInputAction;
 class UAnimMontage;
 class UCombatComponent;
 class UParkourMovementComponent;
-class UStatComponent;
+class UCharacterStatComponent;
 class AWeapon;
 
 UCLASS()
@@ -97,7 +97,7 @@ protected:
 	void SetupToFlyingMode();
 
 	UFUNCTION(BlueprintCallable)
-		void FinishSliding();
+	void FinishSliding();
 
 	void SpawnAbilityWeapon();
 	void AimOffset(float DeltaTime);
@@ -107,6 +107,9 @@ protected:
 
 	void SetMaterialInstanceDynamics();
 	void SetMaterialParamters();
+
+	UFUNCTION()
+	void OnHealthChanged(AActor* InstigatorActor, UStatComponent* OwningComp, float NewHealth, float Delta);
 
 private:
 	float CalculateSpeed();
@@ -130,7 +133,7 @@ private:
 		UParkourMovementComponent* ParkourMovement;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		UStatComponent* Stat;
+		UCharacterStatComponent* CharacterStat;
 
 	bool bJumpButtonClicked = false;
 
@@ -160,12 +163,14 @@ private:
 	FRotator StartingAimRotation;
 
 	UPROPERTY(VisibleAnywhere)
-		ETurningInPlace TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+	ETurningInPlace TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 
 	UPROPERTY(VisibleAnywhere)
-		bool bRotateRootBone;
+	bool bRotateRootBone;
 
 	TArray<UMaterialInstanceDynamic*> MaterialInstanceDynamics;
+
+	FName TimeToHitParamName;
 
 public:
 	FORCEINLINE EPlayerStatus GetPlayerStatus() const { return PlayerStatus; }

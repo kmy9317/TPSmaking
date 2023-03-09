@@ -10,6 +10,8 @@
 class AShooterCharacter;
 class UStatOverlay;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnHealthChanged, AActor*, InstigatorActor, UStatComponent*, OwningComp, float, NewHealth, float, Delta);
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class UE5COOP_API UStatComponent : public UActorComponent
 {
@@ -18,30 +20,16 @@ class UE5COOP_API UStatComponent : public UActorComponent
 public:
 	friend class AShooterCharacter;
 
-	UStatComponent();
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	UPROPERTY(BlueprintAssignable)
+	FOnHealthChanged OnHealthChanged;
 
 protected:
 	virtual void BeginPlay() override;
-	void InitStatOverlay();
-
+	
 	UFUNCTION(BlueprintCallable)
-	bool ApplyHealthChange(float Delta);
-
-	void CheckStamina(float DeltaTime);
-	bool ShouldUseStamina(float& OutSpendAmount);
-	void UseStamina(float Amount, float DeltaTime);
-	void ReGenStamina();
-	void SetTrueRegenStaminaBoolean();
-
-	bool IsSpecificParkourAction(EParkourMovementType CurrentParkour);
+	virtual bool ApplyHealthChange(AActor* InstigatorActor, float Delta);
 
 private:
-	UPROPERTY(VisibleAnywhere, Category = "Character")
-	AShooterCharacter* ShooterCharacter;
-
-	UPROPERTY()
-	UStatOverlay* StatOverlay;
 
 	// Health
 	UPROPERTY(EditDefaultsOnly, Category = "Health")
@@ -50,30 +38,6 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Health")
 	float CurrentHp = 100.f;
 
-	// Stamina
-	UPROPERTY(EditDefaultsOnly, Category = "Stamina")
-	float MaxStamina = 100.f;
-
-	UPROPERTY(VisibleAnywhere, Category = "Stamina")
-	float CurrentStamina = 100.f;
-
-	UPROPERTY(EditAnywhere, Category = "Stamina")
-	float VerticalrActionStamina = 20.f;
-
-	UPROPERTY(EditAnywhere, Category = "Stamina")
-	float SprintStamina = 20.f;
-
-	FTimerHandle RegenStaminaTimer;
-	bool bCanGenerateStamina = true;
-
-	UPROPERTY(EditAnywhere, Category = "Stamina")
-	float RegenStaminaTime = 2.f;
-
-	UPROPERTY(EditAnywhere, Category = "Stamina")
-	float RegenStaminaPerSecond = 20.f;
-
 public:
-	FORCEINLINE void SetShooterCharacter(AShooterCharacter* Shooter) { ShooterCharacter = Shooter; }
 	float GetHealthPercent();
-	float GetStaminaPercent();
 };
